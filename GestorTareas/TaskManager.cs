@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Text.Json;
 using GestorTareas.Models;
+using GestorTareas.Utils;
 
 namespace GestorTareas;
 
@@ -13,10 +14,10 @@ public class TaskManager
 
     public TaskManager()
     {
-        LoadWorkTask();
+        _workTasks = JsonHelper.LoadWorkTask<WorkTask>(FilePath);
     }
 
-    public void AddWorkTask(string title, string description)
+    public void AddWorkTask(string title, string description, Priority priority)
     {
         int newId = _workTasks.Count > 0 ? _workTasks.Max(t => t.Id) + 1 : 1;
 
@@ -24,12 +25,13 @@ public class TaskManager
         {
             Id = newId,
             Title = title,
-            Description = description
+            Description = description,
+            Priority = priority
         };
 
         _workTasks.Add(workTask);
 
-        SaveWorkTask();
+        JsonHelper.SaveWorkTask(FilePath, _workTasks);
     }
 
     public void WorkTaskList()
@@ -59,7 +61,7 @@ public class TaskManager
         }
 
         workTask.IsCompleted = true;
-        SaveWorkTask();
+        JsonHelper.SaveWorkTask(FilePath, _workTasks);
     }
 
     public void DeleteWorkTask(int id)
@@ -72,23 +74,52 @@ public class TaskManager
         }
 
         _workTasks.Remove(workTask);
-        SaveWorkTask();
+        JsonHelper.SaveWorkTask(FilePath, _workTasks);
     }
 
-    private void SaveWorkTask()
+    public void FindWorkTask(string text)
     {
-        var options = new JsonSerializerOptions { WriteIndented = true };
-        string json = JsonSerializer.Serialize(_workTasks, options);
-
-        File.WriteAllText(FilePath, json);
-    }
-
-    private void LoadWorkTask()
-    {
-        if(File.Exists(FilePath))
+        if(string.IsNullOrWhiteSpace(text))
         {
-            string json = File.ReadAllText(FilePath);
-            _workTasks = JsonSerializer.Deserialize<List<WorkTask>>(json) ?? new List<WorkTask>();
+            Console.WriteLine("Debe ingresar un texto válido");
+            return;
+        }
+
+        var foundWorkTask = _workTasks
+            .Where(wt => 
+                wt.Title.Contains(text, StringComparison.OrdinalIgnoreCase) || 
+                wt.Description.Contains(text, StringComparison.OrdinalIgnoreCase)
+            )
+            .ToList();
+
+        if(foundWorkTask.Count == 0)
+        {
+            Console.WriteLine("No se encontraron tareas que coincidan con el texto proporcionado.");
+            return;
+        }
+
+        foreach(var workTask in foundWorkTask)
+        {
+            string state = workTask.IsCompleted ? "Completada" : "Pendiente";
+            Console.WriteLine($"{workTask.Id}. {workTask.Title} - {state}");
+        }
+    }
+
+    public void SortWorkTasksByPriority(Priority priority)
+    {
+        var sortedTasks = _workTasks
+            .Where(t => t.Priority == priority)
+            .ToList();
+
+        if(sortedTasks.Count == 0)
+        {
+            Console.WriteLine("No hay tareas con esa prioridad");
+            return;
+        }
+
+        foreach(var workTask in sortedTasks)
+        {
+            Console.WriteLine($"{workTask.Id} - {workTask.Title} - {workTask.Priority}");
         }
     }
 
