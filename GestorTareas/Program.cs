@@ -11,7 +11,7 @@ while(true)
     Console.WriteLine("3. Completar tarea");
     Console.WriteLine("4. Eliminar tarea");
     Console.WriteLine("5. Buscar tarea");
-    Console.WriteLine("6. Ordenar tareas por prioridad");
+    Console.WriteLine("6. Filtrar tareas por prioridad");
     Console.WriteLine("7. Salir");
     Console.Write("Selecciona una opción: ");
 
@@ -75,7 +75,7 @@ while(true)
         case "5":
             Console.WriteLine("Buscar (Titulo o Descripcion): ");
             string text = Console.ReadLine() ?? string.Empty;
-            taskManager.FindWorkTask(text);
+            taskManager.SearchWorkTask(text);
 
             taskManager.CleanScreen();
             break;
@@ -89,7 +89,7 @@ while(true)
                 priority = (int)Priority.Media;
             }
 
-            taskManager.SortWorkTasksByPriority((Priority)priority);
+            taskManager.FilterWorkTasksByPriority((Priority)priority);
 
             taskManager.CleanScreen();
             break;
