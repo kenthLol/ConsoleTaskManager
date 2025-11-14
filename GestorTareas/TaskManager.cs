@@ -1,4 +1,4 @@
-﻿using System;
+﻿ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Text.Json;
@@ -9,7 +9,7 @@ namespace GestorTareas;
 
 public class TaskManager
 {
-    private const string FilePath = "tasks.json";
+    private static readonly string FilePath = Path.Combine(AppContext.BaseDirectory, "tasks.json");
     private List<WorkTask> _workTasks = new List<WorkTask>();
 
     public TaskManager()
@@ -71,13 +71,14 @@ public class TaskManager
         if(workTask == null)
         {
             Console.WriteLine("Tarea no encontrada");
+            return;
         }
 
         _workTasks.Remove(workTask);
         JsonHelper.SaveWorkTask(FilePath, _workTasks);
     }
 
-    public void FindWorkTask(string text)
+    public void SearchWorkTask(string text)
     {
         if(string.IsNullOrWhiteSpace(text))
         {
@@ -87,8 +88,8 @@ public class TaskManager
 
         var foundWorkTask = _workTasks
             .Where(wt => 
-                wt.Title.Contains(text, StringComparison.OrdinalIgnoreCase) || 
-                wt.Description.Contains(text, StringComparison.OrdinalIgnoreCase)
+                (wt.Title?.Contains(text, StringComparison.OrdinalIgnoreCase) ?? false) || 
+                (wt.Description?.Contains(text, StringComparison.OrdinalIgnoreCase) ?? false)
             )
             .ToList();
 
@@ -105,19 +106,19 @@ public class TaskManager
         }
     }
 
-    public void SortWorkTasksByPriority(Priority priority)
+    public void FilterWorkTasksByPriority(Priority priority)
     {
-        var sortedTasks = _workTasks
+        var filteredTasks = _workTasks
             .Where(t => t.Priority == priority)
             .ToList();
 
-        if(sortedTasks.Count == 0)
+        if(filteredTasks.Count == 0)
         {
             Console.WriteLine("No hay tareas con esa prioridad");
             return;
         }
 
-        foreach(var workTask in sortedTasks)
+        foreach(var workTask in filteredTasks)
         {
             Console.WriteLine($"{workTask.Id} - {workTask.Title} - {workTask.Priority}");
         }
